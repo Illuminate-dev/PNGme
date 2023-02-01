@@ -1,4 +1,4 @@
-use std::{fmt::Display, str::FromStr};
+use std::str::FromStr;
 
 pub type Result<T> = std::result::Result<T, ChunkTypeError>;
 
@@ -34,8 +34,6 @@ impl FromStr for ChunkType {
             Ok(x) => x,
             Err(x) => return Err(ChunkTypeError::ParsingError),
         };
-
-        dbg!(bytes);
 
         Ok(ChunkType { bytes })
     }
