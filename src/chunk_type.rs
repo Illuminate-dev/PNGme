@@ -1,7 +1,12 @@
-use std::{str::FromStr};
+use std::{fmt::Display, str::FromStr};
 
-pub type Error = Box<dyn std::error::Error>;
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, ChunkTypeError>;
+
+#[derive(Debug)]
+pub enum ChunkTypeError {
+    InvalidChunkType,
+    ParsingError,
+}
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct ChunkType {
@@ -9,24 +14,30 @@ pub struct ChunkType {
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
-    type Error = Error;
+    type Error = ChunkTypeError;
     fn try_from(value: [u8; 4]) -> Result<Self> {
         Ok(ChunkType { bytes: value })
     }
 }
 
 impl FromStr for ChunkType {
-    type Err = Error;
+    type Err = ChunkTypeError;
 
     fn from_str(s: &str) -> Result<Self> {
-        let bytes = match s.as_bytes()[..4].try_into() { 
+        for char in s.chars() {
+            if !char.is_alphabetic() {
+                return Err(ChunkTypeError::InvalidChunkType);
+            }
+        }
+
+        let bytes: [u8; 4] = match s.as_bytes()[..4].try_into() {
             Ok(x) => x,
-            Err(x) => return Err(Box::new(x))
+            Err(x) => return Err(ChunkTypeError::ParsingError),
         };
 
-        Ok(ChunkType {
-            bytes,
-        })
+        dbg!(bytes);
+
+        Ok(ChunkType { bytes })
     }
 }
 
@@ -42,23 +53,23 @@ impl ChunkType {
     }
 
     pub fn is_critical(&self) -> bool {
-        false
+        self.bytes[0] >> 5 & 1 == 0b0
     }
 
     pub fn is_public(&self) -> bool {
-        false
+        self.bytes[1] >> 5 & 1 == 0b0
     }
 
     pub fn is_reserved_bit_valid(&self) -> bool {
-        false
+        self.bytes[2] >> 5 & 1 == 0b0
     }
 
     pub fn is_safe_to_copy(&self) -> bool {
-        false
+        self.bytes[3] >> 5 & 1 == 0b1
     }
 
     pub fn is_valid(&self) -> bool {
-        false
+        self.bytes[2] >> 5 & 1 == 0b0
     }
 }
 
