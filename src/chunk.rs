@@ -87,6 +87,10 @@ impl Chunk {
             Err(_) => Err(ChunkError::FromUTF8Error),
         }
     }
+
+    pub fn as_bytes(&self) -> Vec<u8> {
+        Vec::new()
+    }
 }
 
 #[cfg(test)]

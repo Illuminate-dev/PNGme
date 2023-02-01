@@ -1,8 +1,69 @@
+use std::fmt::Display;
+
 use crate::chunk::Chunk;
 
+pub type Result<T> = std::result::Result<T, PngError>;
+
+#[derive(Debug)]
+pub enum PngError {
+    placeholder,
+}
+
+#[derive(Debug)]
 pub struct Png {
     header: [u8; 8],
-    chunks: Vec<Chunk>
+    chunks: Vec<Chunk>,
+}
+
+impl TryFrom<&[u8]> for Png {
+    type Error = PngError;
+
+    fn try_from(value: &[u8]) -> Result<Self> {
+        let header: [u8; 8] = value[..8].try_into().unwrap();
+
+        let mut chunks: Vec<Chunk> = Vec::new();
+
+        Err(PngError::placeholder)
+    }
+}
+
+impl Display for Png {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self:#?}")
+    }
+}
+
+impl Png {
+    pub const STANDARD_HEADER: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
+
+    fn from_chunks(chunks: Vec<Chunk>) -> Png {
+        Png {
+            header: Self::STANDARD_HEADER,
+            chunks,
+        }
+    }
+
+    fn append_chunk(&mut self, chunk: Chunk) {}
+
+    fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
+        Err(PngError::placeholder)
+    }
+
+    fn header(&self) -> &[u8; 8] {
+        &self.header
+    }
+
+    fn chunks(&self) -> &[Chunk] {
+        &self.chunks
+    }
+
+    fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+        None
+    }
+
+    fn as_bytes(&self) -> Vec<u8> {
+        Vec::new()
+    }
 }
 
 #[cfg(test)]
