@@ -32,10 +32,12 @@ impl FromStr for ChunkType {
 
         let bytes: [u8; 4] = match s.as_bytes()[..4].try_into() {
             Ok(x) => x,
-            Err(x) => return Err(ChunkTypeError::ParsingError),
+            Err(_) => return Err(ChunkTypeError::ParsingError),
         };
 
-        Ok(ChunkType { bytes })
+        let chunktype = ChunkType { bytes };
+
+        Ok(chunktype)
     }
 }
 

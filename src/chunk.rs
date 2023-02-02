@@ -81,7 +81,6 @@ impl Chunk {
 
     pub fn data_as_string(&self) -> Result<String> {
         let data = self.chunk_data.to_vec();
-        dbg!(&data);
         match String::from_utf8(data) {
             Ok(x) => Ok(x),
             Err(_) => Err(ChunkError::FromUTF8Error),

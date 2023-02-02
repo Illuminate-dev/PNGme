@@ -52,18 +52,18 @@ impl Display for Png {
 impl Png {
     pub const STANDARD_HEADER: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
 
-    fn from_chunks(chunks: Vec<Chunk>) -> Png {
+    pub fn from_chunks(chunks: Vec<Chunk>) -> Png {
         Png {
             header: Self::STANDARD_HEADER,
             chunks,
         }
     }
 
-    fn append_chunk(&mut self, chunk: Chunk) {
+    pub fn append_chunk(&mut self, chunk: Chunk) {
         self.chunks.push(chunk);
     }
 
-    fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
+    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
         for (i, chunk) in self.chunks.iter().enumerate() {
             if chunk.chunk_type().to_string() == chunk_type {
                 return Ok(self.chunks.remove(i));
@@ -72,15 +72,15 @@ impl Png {
         Err(PngError::RemoveError)
     }
 
-    fn header(&self) -> &[u8; 8] {
+    pub fn header(&self) -> &[u8; 8] {
         &self.header
     }
 
-    fn chunks(&self) -> &[Chunk] {
+    pub fn chunks(&self) -> &[Chunk] {
         &self.chunks
     }
 
-    fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+    pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
         for chunk in &self.chunks {
             if chunk.chunk_type().to_string() == chunk_type {
                 return Some(&chunk);
@@ -89,7 +89,7 @@ impl Png {
         None
     }
 
-    fn as_bytes(&self) -> Vec<u8> {
+    pub fn as_bytes(&self) -> Vec<u8> {
         let chunks: Vec<u8> = self.chunks.iter().fold(Vec::new(), |prev, chunk| {
             prev.iter()
                 .copied()
@@ -97,7 +97,6 @@ impl Png {
                 .collect()
         });
 
-        dbg!(&chunks);
         self.header
             .iter()
             .copied()
