@@ -11,21 +11,33 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    Encode {
-        filepath: PathBuf,
-        chunk_type: String,
-        message: String,
-        output_file: Option<PathBuf>,
-    },
-    Decode {
-        filepath: PathBuf,
-        chunk_type: String,
-    },
-    Remove {
-        filepath: PathBuf,
-        chunk_type: String,
-    },
-    Print {
-        filepath: PathBuf,
-    },
+    Encode(EncodeArgs),
+    Decode(DecodeArgs),
+    Remove(RemoveArgs),
+    Print(PrintArgs),
+}
+
+#[derive(clap::Args, Debug)]
+pub struct EncodeArgs {
+    pub filepath: PathBuf,
+    pub chunk_type: String,
+    pub message: String,
+    pub output_file: Option<PathBuf>,
+}
+
+#[derive(clap::Args, Debug)]
+pub struct DecodeArgs {
+    pub filepath: PathBuf,
+    pub chunk_type: String,
+}
+
+#[derive(clap::Args, Debug)]
+pub struct RemoveArgs {
+    pub filepath: PathBuf,
+    pub chunk_type: String,
+}
+
+#[derive(clap::Args, Debug)]
+pub struct PrintArgs {
+    pub filepath: PathBuf,
 }
