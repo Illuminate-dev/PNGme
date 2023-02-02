@@ -21,6 +21,10 @@ impl TryFrom<&[u8]> for Chunk {
     type Error = PngmeError;
 
     fn try_from(value: &[u8]) -> Result<Self> {
+        if value.len() < 12 {
+            return Err(PngmeError::ChunkInvalid);
+        }
+
         let length: u32 = u32::from_be_bytes(match value[..4].try_into() {Ok(x) => x, Err(_) => return Err(PngmeError::ChunkInvalid)});
         let chunk_type: [u8; 4] = value[4..8].try_into().unwrap();
         let chunk_type = ChunkType::try_from(chunk_type).unwrap();

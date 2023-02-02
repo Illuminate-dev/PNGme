@@ -13,6 +13,11 @@ impl TryFrom<&[u8]> for Png {
     type Error = PngmeError;
 
     fn try_from(value: &[u8]) -> Result<Self> {
+
+        if value.len() < 20 {
+            return Err(PngmeError::PngInvalidLength);
+        }
+
         let header: [u8; 8] = value[..8].try_into().unwrap();
 
         if header != Self::STANDARD_HEADER {
@@ -26,7 +31,7 @@ impl TryFrom<&[u8]> for Png {
         while value.len() > i + 4 {
             let len = u32::from_be_bytes(value[i..i + 4].try_into().unwrap());
             let end = len as usize + i + 12;
-            let chunk = Chunk::try_from(&value[i..end]).unwrap();
+            let chunk = Chunk::try_from(&value[i..end])?;
             i += len as usize + 12;
             chunks.push(chunk);
         }
