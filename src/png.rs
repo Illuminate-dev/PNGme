@@ -1,15 +1,7 @@
 use std::fmt::Display;
 
 use crate::chunk::Chunk;
-
-pub type Result<T> = std::result::Result<T, PngError>;
-
-#[derive(Debug)]
-pub enum PngError {
-    placeholder,
-    RemoveError,
-    InvalidHeader,
-}
+use super::{Result, PngmeError};
 
 #[derive(Debug)]
 pub struct Png {
@@ -18,13 +10,13 @@ pub struct Png {
 }
 
 impl TryFrom<&[u8]> for Png {
-    type Error = PngError;
+    type Error = PngmeError;
 
     fn try_from(value: &[u8]) -> Result<Self> {
         let header: [u8; 8] = value[..8].try_into().unwrap();
 
         if header != Self::STANDARD_HEADER {
-            return Err(PngError::InvalidHeader);
+            return Err(PngmeError::PngInvalidHeader);
         }
 
         let mut chunks = Vec::new();
@@ -69,7 +61,7 @@ impl Png {
                 return Ok(self.chunks.remove(i));
             }
         }
-        Err(PngError::RemoveError)
+        Err(PngmeError::PngRemoveError)
     }
 
     pub fn header(&self) -> &[u8; 8] {
@@ -109,7 +101,7 @@ impl Png {
 mod tests {
     use super::*;
     use crate::chunk::Chunk;
-    use crate::chunk_type::{ChunkType, ChunkTypeError};
+    use crate::chunk_type::ChunkType;
     use std::convert::TryFrom;
     use std::str::FromStr;
 
@@ -131,9 +123,7 @@ mod tests {
     fn chunk_from_strings(
         chunk_type: &str,
         data: &str,
-    ) -> std::result::Result<Chunk, ChunkTypeError> {
-        use std::str::FromStr;
-
+    ) -> super::Result<Chunk> {
         let chunk_type = ChunkType::from_str(chunk_type)?;
         let data: Vec<u8> = data.bytes().collect();
 

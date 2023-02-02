@@ -35,3 +35,12 @@ pub fn print(args: args::PrintArgs) {
     let png = Png::try_from(file.as_slice()).unwrap();
     println!("{}: {}", args.filepath.display(), png);
 }
+
+pub fn run(arg: args::Args) {
+    match arg.command {
+        args::Commands::Encode(args) => encode(args),
+        args::Commands::Decode(args) => decode(args),
+        args::Commands::Remove(args) => remove(args),
+        args::Commands::Print(args) => print(args)
+    }
+}
