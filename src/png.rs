@@ -7,6 +7,8 @@ pub type Result<T> = std::result::Result<T, PngError>;
 #[derive(Debug)]
 pub enum PngError {
     placeholder,
+    RemoveError,
+    InvalidHeader,
 }
 
 #[derive(Debug)]
@@ -21,9 +23,23 @@ impl TryFrom<&[u8]> for Png {
     fn try_from(value: &[u8]) -> Result<Self> {
         let header: [u8; 8] = value[..8].try_into().unwrap();
 
-        let mut chunks: Vec<Chunk> = Vec::new();
+        if header != Self::STANDARD_HEADER {
+            return Err(PngError::InvalidHeader);
+        }
 
-        Err(PngError::placeholder)
+        let mut chunks = Vec::new();
+
+        let mut i: usize = 8;
+
+        while value.len() > i + 4 {
+            let len = u32::from_be_bytes(value[i..i + 4].try_into().unwrap());
+            let end = len as usize + i + 12;
+            let chunk = Chunk::try_from(&value[i..end]).unwrap();
+            i += len as usize + 12;
+            chunks.push(chunk);
+        }
+
+        Ok(Png { header, chunks })
     }
 }
 
@@ -43,10 +59,17 @@ impl Png {
         }
     }
 
-    fn append_chunk(&mut self, chunk: Chunk) {}
+    fn append_chunk(&mut self, chunk: Chunk) {
+        self.chunks.push(chunk);
+    }
 
     fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
-        Err(PngError::placeholder)
+        for (i, chunk) in self.chunks.iter().enumerate() {
+            if chunk.chunk_type().to_string() == chunk_type {
+                return Ok(self.chunks.remove(i));
+            }
+        }
+        Err(PngError::RemoveError)
     }
 
     fn header(&self) -> &[u8; 8] {
@@ -58,11 +81,28 @@ impl Png {
     }
 
     fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+        for chunk in &self.chunks {
+            if chunk.chunk_type().to_string() == chunk_type {
+                return Some(&chunk);
+            }
+        }
         None
     }
 
     fn as_bytes(&self) -> Vec<u8> {
-        Vec::new()
+        let chunks: Vec<u8> = self.chunks.iter().fold(Vec::new(), |prev, chunk| {
+            prev.iter()
+                .copied()
+                .chain(chunk.as_bytes().iter().copied())
+                .collect()
+        });
+
+        dbg!(&chunks);
+        self.header
+            .iter()
+            .copied()
+            .chain(chunks.iter().copied())
+            .collect()
     }
 }
 
@@ -70,7 +110,7 @@ impl Png {
 mod tests {
     use super::*;
     use crate::chunk::Chunk;
-    use crate::chunk_type::ChunkType;
+    use crate::chunk_type::{ChunkType, ChunkTypeError};
     use std::convert::TryFrom;
     use std::str::FromStr;
 
@@ -89,7 +129,10 @@ mod tests {
         Png::from_chunks(chunks)
     }
 
-    fn chunk_from_strings(chunk_type: &str, data: &str) -> Result<Chunk> {
+    fn chunk_from_strings(
+        chunk_type: &str,
+        data: &str,
+    ) -> std::result::Result<Chunk, ChunkTypeError> {
         use std::str::FromStr;
 
         let chunk_type = ChunkType::from_str(chunk_type)?;

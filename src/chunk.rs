@@ -67,7 +67,7 @@ impl Chunk {
         self.length
     }
 
-    fn chunk_type(&self) -> &ChunkType {
+    pub fn chunk_type(&self) -> &ChunkType {
         &self.chunk_type
     }
 
@@ -75,7 +75,7 @@ impl Chunk {
         &self.chunk_data
     }
 
-    fn crc(&self) -> u32 {
+    pub fn crc(&self) -> u32 {
         self.crc
     }
 
@@ -89,8 +89,28 @@ impl Chunk {
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {
-        Vec::new()
+        let length = u32_to_u8_array(self.length);
+        let chunk_type = self.chunk_type.bytes();
+        let crc = u32_to_u8_array(self.crc);
+
+        length
+            .iter()
+            .copied()
+            .chain(chunk_type.iter().copied())
+            .chain(self.chunk_data.iter().copied())
+            .chain(crc.iter().copied())
+            .collect()
+
     }
+}
+
+fn u32_to_u8_array(x: u32) -> [u8; 4] {
+    let b1: u8 = (x >> 24) as u8;
+    let b2: u8 = (x >> 16) as u8;
+    let b3: u8 = (x >> 8) as u8;
+    let b4: u8 = (x) as u8;
+
+    [b1, b2, b3, b4]
 }
 
 #[cfg(test)]
