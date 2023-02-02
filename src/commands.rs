@@ -45,17 +45,21 @@ pub fn remove(args: args::RemoveArgs) -> crate::Result<()> {
     };
     let mut png = Png::try_from(file.as_slice())?;
     let chunk = png.remove_chunk(&args.chunk_type)?;
-    println!("Removed Chunk: {}", chunk)
-    match fs::write(output_file, png.as_bytes()) {
+    println!("Removed Chunk: {}", chunk);
+    match fs::write(args.filepath, png.as_bytes()) {
         Ok(_) => Ok(()),
         Err(_) => Err(PngmeError::FileWriteError),
     }
 }
 
-pub fn print(args: args::PrintArgs) {
-    let file = fs::read(&args.filepath).unwrap();
-    let png = Png::try_from(file.as_slice()).unwrap();
+pub fn print(args: args::PrintArgs) -> crate::Result<()> {
+    let file = match fs::read(&args.filepath) {
+        Ok(x) => x,
+        Err(_) => return Err(PngmeError::FileReadError)
+    };
+    let png = Png::try_from(file.as_slice())?;
     println!("{}: {}", args.filepath.display(), png);
+    Ok(())
 }
 
 pub fn run(arg: args::Args) -> crate::Result<()> {
