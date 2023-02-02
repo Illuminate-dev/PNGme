@@ -14,4 +14,7 @@ pub enum PngmeError {
     PngInvalidHeader,
     ChunkInvalid,
     ChunkFromUTF8Error,
+    PngInvalidLength,
+    FileReadError,
+    FileWriteError
 }
