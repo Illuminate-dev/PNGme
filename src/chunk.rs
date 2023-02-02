@@ -1,14 +1,7 @@
 use std::fmt::Display;
 
 use crate::chunk_type::ChunkType;
-
-type Result<T> = std::result::Result<T, ChunkError>;
-
-#[derive(Debug)]
-pub enum ChunkError {
-    InvalidChunkError,
-    FromUTF8Error,
-}
+use super::{Result, PngmeError};
 
 #[derive(Debug)]
 pub struct Chunk {
@@ -25,10 +18,10 @@ impl Display for Chunk {
 }
 
 impl TryFrom<&[u8]> for Chunk {
-    type Error = ChunkError;
+    type Error = PngmeError;
 
     fn try_from(value: &[u8]) -> Result<Self> {
-        let length: u32 = u32::from_be_bytes(value[..4].try_into().unwrap());
+        let length: u32 = u32::from_be_bytes(match value[..4].try_into() {Ok(x) => x, Err(_) => return Err(PngmeError::ChunkInvalid)});
         let chunk_type: [u8; 4] = value[4..8].try_into().unwrap();
         let chunk_type = ChunkType::try_from(chunk_type).unwrap();
         let end_slice: usize = length.try_into().unwrap();
@@ -36,7 +29,7 @@ impl TryFrom<&[u8]> for Chunk {
         let crc = u32::from_be_bytes(value[value.len() - 4..].try_into().unwrap());
         let real_crc = crc::crc32::checksum_ieee(&value[4..end_slice + 8]);
         if real_crc != crc {
-            return Err(ChunkError::InvalidChunkError);
+            return Err(PngmeError::ChunkInvalid);
         }
         Ok(Chunk {
             length,
@@ -83,7 +76,7 @@ impl Chunk {
         let data = self.chunk_data.to_vec();
         match String::from_utf8(data) {
             Ok(x) => Ok(x),
-            Err(_) => Err(ChunkError::FromUTF8Error),
+            Err(_) => Err(PngmeError::ChunkFromUTF8Error),
         }
     }
 

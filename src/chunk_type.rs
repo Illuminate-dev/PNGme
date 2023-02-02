@@ -1,12 +1,6 @@
 use std::str::FromStr;
-
-pub type Result<T> = std::result::Result<T, ChunkTypeError>;
-
-#[derive(Debug)]
-pub enum ChunkTypeError {
-    InvalidChunkType,
-    ParsingError,
-}
+use super::Result;
+use super::PngmeError;
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct ChunkType {
@@ -14,25 +8,25 @@ pub struct ChunkType {
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
-    type Error = ChunkTypeError;
+    type Error = PngmeError;
     fn try_from(value: [u8; 4]) -> Result<Self> {
         Ok(ChunkType { bytes: value })
     }
 }
 
 impl FromStr for ChunkType {
-    type Err = ChunkTypeError;
+    type Err = PngmeError;
 
     fn from_str(s: &str) -> Result<Self> {
         for char in s.chars() {
             if !char.is_alphabetic() {
-                return Err(ChunkTypeError::InvalidChunkType);
+                return Err(PngmeError::ChunkTypeInvalid);
             }
         }
 
         let bytes: [u8; 4] = match s.as_bytes()[..4].try_into() {
             Ok(x) => x,
-            Err(_) => return Err(ChunkTypeError::ParsingError),
+            Err(_) => return Err(PngmeError::ChunkTypeParsingError),
         };
 
         let chunktype = ChunkType { bytes };
